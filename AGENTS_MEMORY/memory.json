@@ -1,0 +1,24 @@
+{
+  "weak_topics": [
+    "string_pool",
+    "kadane_algorithm"
+  ],
+  "strong_topics": [
+    "sql_queries",
+    "project_defense"
+  ],
+  "practice_history": [
+    {
+      "subject": "java",
+      "topic": "string_pool",
+      "mode": "interview",
+      "timestamp": "2026-08-04T20:00:00Z"
+    },
+    {
+      "subject": "dsa",
+      "topic": "kadane_algorithm",
+      "mode": "practical",
+      "timestamp": "2026-08-04T20:15:00Z"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "mistakes": [
+    {
+      "subject": "java",
+      "topic": "string_pool",
+      "mistake": "Confused object creation count for new String('CDAC')",
+      "timestamp": "2026-08-04T20:00:00Z"
+    },
+    {
+      "subject": "dsa",
+      "topic": "kadane_algorithm",
+      "mistake": "Skipped formal O(N) proof & implementation during drill",
+      "timestamp": "2026-08-04T20:15:00Z"
+    }
+  ]
+}

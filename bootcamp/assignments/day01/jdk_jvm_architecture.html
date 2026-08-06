@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Architecture Visualizer: JDK, JRE, JVM & JIT</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --card-bg: rgba(18, 26, 43, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            
+            --jdk-color: #8b5cf6;
+            --jdk-glow: rgba(139, 92, 246, 0.35);
+            --jre-color: #06b6d4;
+            --jre-glow: rgba(6, 182, 212, 0.35);
+            --jvm-color: #f59e0b;
+            --jvm-glow: rgba(245, 158, 11, 0.35);
+            --jit-color: #ec4899;
+            --jit-glow: rgba(236, 72, 153, 0.35);
+            --mem-color: #10b981;
+            
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1350px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa 0%, #38bdf8 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 750px;
+            margin: 0 auto 1.5rem auto;
+            line-height: 1.6;
+        }
+
+        /* Navigation Bar */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            color: #fff;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(6, 182, 212, 0.3));
+            border-color: var(--jre-color);
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.25);
+        }
+
+        /* Section layout */
+        .section-view {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .section-view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Interactive Architecture Box Diagram */
+        .arch-diagram-wrapper {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .diag-box {
+            border-radius: 18px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* JDK Level */
+        .jdk-box {
+            background: rgba(139, 92, 246, 0.05);
+            border: 2px dashed var(--jdk-color);
+            box-shadow: 0 0 30px var(--jdk-glow);
+        }
+
+        .jdk-box:hover {
+            box-shadow: 0 0 45px var(--jdk-glow);
+        }
+
+        .box-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .jdk-title {
+            background: var(--jdk-color);
+            color: #fff;
+        }
+
+        .jdk-tools {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .tool-badge {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            color: #c4b5fd;
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tool-badge:hover {
+            background: var(--jdk-color);
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        /* JRE Level */
+        .jre-box {
+            background: rgba(6, 182, 212, 0.05);
+            border: 2px solid var(--jre-color);
+            box-shadow: 0 0 25px var(--jre-glow);
+            margin-top: 0.5rem;
+        }
+
+        .jre-title {
+            background: var(--jre-color);
+            color: #000;
+        }
+
+        .jre-libs {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .lib-badge {
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            color: #67e8f9;
+            padding: 0.4rem 0.85rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .lib-badge:hover {
+            background: var(--jre-color);
+            color: #000;
+            transform: scale(1.05);
+        }
+
+        /* JVM Level */
+        .jvm-box {
+            background: rgba(245, 158, 11, 0.06);
+            border: 2px solid var(--jvm-color);
+            box-shadow: 0 0 25px var(--jvm-glow);
+        }
+
+        .jvm-title {
+            background: var(--jvm-color);
+            color: #000;
+        }
+
+        .jvm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .jvm-subcard {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .jvm-subcard:hover {
+            border-color: var(--jvm-color);
+            transform: translateY(-3px);
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .subcard-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #fcd34d;
+        }
+
+        /* JIT Section Highlight */
+        .jit-subcard {
+            background: rgba(236, 72, 153, 0.08);
+            border: 1px solid var(--jit-color);
+            box-shadow: 0 0 20px var(--jit-glow);
+        }
+
+        .jit-header {
+            color: #f472b6;
+        }
+
+        .subcard-items {
+            list-style: none;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .subcard-items li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .subcard-items li::before {
+            content: "➔";
+            position: absolute;
+            left: 0;
+            color: var(--jvm-color);
+            font-size: 0.75rem;
+        }
+
+        .jit-subcard .subcard-items li::before {
+            color: var(--jit-color);
+        }
+
+        /* Execution Flow Simulator */
+        .sim-container {
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .sim-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #67e8f9;
+        }
+
+        .sim-controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn-sim {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            border: none;
+            color: #fff;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-sim:hover {
+            transform: scale(1.03);
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        .btn-reset:hover {
+            background: rgba(239, 68, 68, 0.4);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .flow-pipeline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            position: relative;
+        }
+
+        .flow-step {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step.active {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.35);
+            transform: scale(1.03);
+        }
+
+        .flow-step.highlight-jit {
+            border-color: var(--jit-color);
+            background: rgba(236, 72, 153, 0.2);
+            box-shadow: 0 0 25px var(--jit-glow);
+        }
+
+        .step-num {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin: 0 auto 0.75rem auto;
+        }
+
+        .flow-step.active .step-num {
+            background: #38bdf8;
+            color: #000;
+        }
+
+        .step-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .step-desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .sim-console {
+            margin-top: 1.5rem;
+            background: #030712;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #4ade80;
+            min-height: 80px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        /* Detailed Notes Grid */
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .note-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .note-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .note-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+        }
+
+        .tag-jdk { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
+        .tag-jre { background: rgba(6, 182, 212, 0.2); color: #67e8f9; }
+        .tag-jvm { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+        .tag-jit { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+
+        /* Visual Mindmap Styling */
+        .mindmap-wrapper {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(16px);
+            margin-bottom: 3rem;
+        }
+
+        .mindmap-header-title {
+            text-align: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #38bdf8;
+            margin-bottom: 0.5rem;
+        }
+
+        .mindmap-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .mindmap-core-root {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .root-pill {
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4, #f59e0b, #ec4899);
+            padding: 1.25rem 2.5rem;
+            border-radius: 50px;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.4rem;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.4);
+            letter-spacing: 0.03em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            animation: pulseGlow 3s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 25px rgba(139, 92, 246, 0.4); }
+            to { box-shadow: 0 0 45px rgba(236, 72, 153, 0.6); }
+        }
+
+        .mindmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .mm-branch-card {
+            background: rgba(30, 41, 59, 0.7);
+            border-radius: 18px;
+            padding: 1.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .mm-branch-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .mm-branch-jdk {
+            border-color: var(--jdk-color);
+            box-shadow: 0 0 20px var(--jdk-glow);
+        }
+
+        .mm-branch-jre {
+            border-color: var(--jre-color);
+            box-shadow: 0 0 20px var(--jre-glow);
+        }
+
+        .mm-branch-jvm {
+            border-color: var(--jvm-color);
+            box-shadow: 0 0 20px var(--jvm-glow);
+        }
+
+        .mm-branch-jit {
+            border-color: var(--jit-color);
+            box-shadow: 0 0 20px var(--jit-glow);
+        }
+
+        .mm-branch-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mm-node-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .mm-node {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mm-node:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(30, 41, 59, 0.95);
+            transform: translateX(4px);
+        }
+
+        .mm-node-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mm-node-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            line-height: 1.4;
+        }
+
+        .note-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .note-body {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .note-body p {
+            margin-bottom: 0.75rem;
+        }
+
+        .note-body ul {
+            margin-left: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .note-body code {
+            font-family: 'Fira Code', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            color: #38bdf8;
+            font-size: 0.85em;
+        }
+
+        /* Flashcard FAQ */
+        .faq-accordion {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-question {
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .faq-question:hover {
+            color: #38bdf8;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+            background: rgba(15, 23, 42, 0.6);
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .faq-answer-inner {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            transition: max-height 0.3s ease-in-out;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        .faq-icon {
+            transition: transform 0.3s ease;
+            color: var(--text-muted);
+        }
+
+        /* Tooltip Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 550px;
+            width: 90%;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #38bdf8;
+        }
+
+        .modal-content {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-close {
+            background: var(--jdk-color);
+            border: none;
+            color: #fff;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>Java Architecture Visualizer</h1>
+            <p class="subtitle">Interactive, animated breakdown of JDK, JRE, JVM & JIT Compiler with execution pipeline and complete notes for CDAC & Interview Preparation.</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('diagram')">
+                <span>🎨</span> Animated Diagram
+            </button>
+            <button class="tab-btn" onclick="switchTab('mindmap')">
+                <span>🧠</span> Interactive Mindmap
+            </button>
+            <button class="tab-btn" onclick="switchTab('simulator')">
+                <span>⚡</span> Execution Simulator
+            </button>
+            <button class="tab-btn" onclick="switchTab('notes')">
+                <span>📖</span> Comprehensive Notes
+            </button>
+            <button class="tab-btn" onclick="switchTab('interview')">
+                <span>🎯</span> Interview Flashcards
+            </button>
+        </div>
+
+        <!-- TAB 1: ANIMATED DIAGRAM -->
+        <div id="tab-diagram" class="section-view active">
+            <div class="arch-diagram-wrapper">
+                
+                <!-- JDK OUTER CONTAINER -->
+                <div class="diag-box jdk-box">
+                    <div class="box-title jdk-title">
+                        <span>📦</span> JDK (Java Development Kit)
+                    </div>
+                    <p style="font-size: 0.9rem; color: #c4b5fd; margin-bottom: 1rem; line-height: 1.5;">
+                        Full development environment. Contains compiler (<code>javac</code>), debuggers, tools + JRE.
+                    </p>
+
+                    <!-- Development Tools -->
+                    <div class="jdk-tools">
+                        <div class="tool-badge" onclick="showModal('javac', 'Java Compiler. Converts human-readable .java source code into platform-independent bytecode (.class).')">
+                            ⚙️ javac (Compiler)
+                        </div>
+                        <div class="tool-badge" onclick="showModal('jdb', 'Java Debugger. Inspects running threads, call stacks, memory values, and breakpoints.')">
+                            🐞 jdb (Debugger)
+                        </div>
+                        <div class="tool-badge" onclick="showModal('jar', 'Java Archive tool. Packages multiple .class files, metadata, and assets into a single .jar file.')">
+                            📦 jar (Archiver)
+                        </div>
+                        <div class="tool-badge" onclick="showModal('javap', 'Java Class File Disassembler. Decodes bytecode back into human-readable assembly-like instructions.')">
+                            🔍 javap (Disassembler)
+                        </div>
+                        <div class="tool-badge" onclick="showModal('javadoc', 'Documentation Generator. Generates HTML API documentation from special javadoc comments.')">
+                            📝 javadoc
+                        </div>
+                    </div>
+
+                    <!-- JRE MIDDLE CONTAINER -->
+                    <div class="diag-box jre-box">
+                        <div class="box-title jre-title">
+                            <span>🚀</span> JRE (Java Runtime Environment)
+                        </div>
+                        <p style="font-size: 0.9rem; color: #a5f3fc; margin-bottom: 1rem; line-height: 1.5;">
+                            Runtime execution environment. Contains core class libraries (<code>rt.jar</code>) + JVM instance. Required to RUN Java apps.
+                        </p>
+
+                        <!-- JRE Libraries -->
+                        <div class="jre-libs">
+                            <div class="lib-badge" onclick="showModal('rt.jar', 'Runtime Libraries. Contains core Java classes like java.lang, java.util, java.io, java.math.')">
+                                📚 rt.jar / Standard Modules
+                            </div>
+                            <div class="lib-badge" onclick="showModal('util-libs', 'Utility & Collection Framework classes like ArrayList, HashMap, HashSet, LinkedList.')">
+                                🗃️ java.util & Collections
+                            </div>
+                            <div class="lib-badge" onclick="showModal('io-libs', 'Input/Output and NIO libraries for file, socket, and stream management.')">
+                                🔌 java.io & java.nio
+                            </div>
+                        </div>
+
+                        <!-- JVM INNER CONTAINER -->
+                        <div class="diag-box jvm-box">
+                            <div class="box-title jvm-title">
+                                <span>⚙️</span> JVM (Java Virtual Machine)
+                            </div>
+                            <p style="font-size: 0.9rem; color: #fde68a; margin-bottom: 1rem; line-height: 1.5;">
+                                Virtual engine executing bytecode. Converts platform-neutral bytecode into OS-native machine instructions.
+                            </p>
+
+                            <div class="jvm-grid">
+                                <!-- ClassLoader Subcard -->
+                                <div class="jvm-subcard">
+                                    <div class="subcard-header">
+                                        <span>📥</span> 1. ClassLoader Subsystem
+                                    </div>
+                                    <ul class="subcard-items">
+                                        <li><strong>Loading</strong>: Bootstrap, Extension/Platform, Application loaders.</li>
+                                        <li><strong>Linking</strong>: Verify bytecode, Prepare static fields, Resolve references.</li>
+                                        <li><strong>Initialization</strong>: Execute static initializers & static blocks.</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Memory Area Subcard -->
+                                <div class="jvm-subcard">
+                                    <div class="subcard-header">
+                                        <span>🧠</span> 2. JVM Memory Areas
+                                    </div>
+                                    <ul class="subcard-items">
+                                        <li><strong>Method Area / Metaspace</strong>: Class data, static variables, method metadata.</li>
+                                        <li><strong>Heap Memory</strong>: All object instances (`new Object()`) & instance fields.</li>
+                                        <li><strong>JVM Stack</strong>: Local variables, frame stacks, method return addresses.</li>
+                                        <li><strong>PC Register</strong>: Current executing instruction address per thread.</li>
+                                        <li><strong>Native Stack</strong>: C/C++ native method execution frames.</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Execution Engine & JIT -->
+                                <div class="jvm-subcard jit-subcard">
+                                    <div class="subcard-header jit-header">
+                                        <span>⚡</span> 3. Execution Engine & JIT
+                                    </div>
+                                    <ul class="subcard-items">
+                                        <li><strong>Interpreter</strong>: Reads & executes bytecode line-by-line (Fast start, slow loop).</li>
+                                        <li><strong>JIT Compiler (Just-In-Time)</strong>: Compiles "Hotspot" loops into native machine code.</li>
+                                        <li><strong>Profiler</strong>: Detects frequently called methods ("hot spots").</li>
+                                        <li><strong>Garbage Collector (GC)</strong>: Reclaims memory of unreachable heap objects automatically.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- END JVM -->
+
+                    </div>
+                    <!-- END JRE -->
+
+                </div>
+                <!-- END JDK -->
+
+            </div>
+        </div>
+
+        <!-- TAB 1.5: INTERACTIVE MINDMAP -->
+        <div id="tab-mindmap" class="section-view">
+            <div class="mindmap-wrapper">
+                <div class="mindmap-header-title">Java Architecture Visual Mindmap</div>
+                <div class="mindmap-subtitle">Click on any node to expand details and inspect architectural responsibilities.</div>
+
+                <div class="mindmap-core-root">
+                    <div class="root-pill">☕ Java Platform Architecture</div>
+                </div>
+
+                <div class="mindmap-grid">
+                    <!-- Branch 1: JDK -->
+                    <div class="mm-branch-card mm-branch-jdk">
+                        <div class="mm-branch-header" style="color: var(--jdk-color);">
+                            <span>📦</span> 1. JDK (Java Development Kit)
+                        </div>
+                        <div class="mm-node-list">
+                            <div class="mm-node" onclick="showModal('javac Compiler', 'Converts human-readable Java source code (.java) into platform-independent bytecode (.class).')">
+                                <div class="mm-node-title">⚙️ javac Compiler <span>➔</span></div>
+                                <div class="mm-node-desc">Source Code (.java) ➔ Bytecode (.class)</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('jdb Debugger', 'Command-line tool to set breakpoints, step through code, and debug memory/thread states.')">
+                                <div class="mm-node-title">🐞 jdb Debugger <span>➔</span></div>
+                                <div class="mm-node-desc">Inspect stack frames & variables</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('jar Archiver', 'Bundles multiple compiled .class files and assets into a compressed .jar file.')">
+                                <div class="mm-node-title">📦 jar Archiver <span>➔</span></div>
+                                <div class="mm-node-desc">Package app into Java Archive</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('javadoc & javap', 'javadoc generates API docs. javap disassembles bytecode into readable assembly instructions.')">
+                                <div class="mm-node-title">📝 javadoc & javap <span>➔</span></div>
+                                <div class="mm-node-desc">Documentation & Bytecode Disassembler</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Branch 2: JRE -->
+                    <div class="mm-branch-card mm-branch-jre">
+                        <div class="mm-branch-header" style="color: var(--jre-color);">
+                            <span>🚀</span> 2. JRE (Java Runtime)
+                        </div>
+                        <div class="mm-node-list">
+                            <div class="mm-node" onclick="showModal('rt.jar & java.base', 'Standard system libraries containing core Java classes: java.lang, java.util, java.io.')">
+                                <div class="mm-node-title">📚 Core Class Libraries <span>➔</span></div>
+                                <div class="mm-node-desc">java.lang, java.util, java.io</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('Collections Framework', 'Built-in data structure classes like ArrayList, HashMap, HashSet, and Concurrent HashMap.')">
+                                <div class="mm-node-title">🗃️ Collections Framework <span>➔</span></div>
+                                <div class="mm-node-desc">ArrayList, HashMap, HashSet</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('Runtime Config Files', 'Security policies, property files, and font support required during runtime.')">
+                                <div class="mm-node-title">⚙️ Runtime Property Files <span>➔</span></div>
+                                <div class="mm-node-desc">Security & System properties</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Branch 3: JVM -->
+                    <div class="mm-branch-card mm-branch-jvm">
+                        <div class="mm-branch-header" style="color: var(--jvm-color);">
+                            <span>⚙️</span> 3. JVM (Virtual Machine)
+                        </div>
+                        <div class="mm-node-list">
+                            <div class="mm-node" onclick="showModal('ClassLoader Subsystem', 'Loads bytecode into memory, links dependencies (Verify, Prepare, Resolve), and initializes static blocks.')">
+                                <div class="mm-node-title">📥 ClassLoader Subsystem <span>➔</span></div>
+                                <div class="mm-node-desc">Loading ➔ Linking ➔ Initialization</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('Heap & Metaspace Memory', 'Heap stores Object instances. Metaspace stores Class Metadata & static fields.')">
+                                <div class="mm-node-title">🧠 Heap & Metaspace <span>➔</span></div>
+                                <div class="mm-node-desc">Objects, Statics, Class definitions</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('Thread Stack & PC Register', 'Stack holds frames per method call (local vars). PC Register holds current instruction address.')">
+                                <div class="mm-node-title">🧵 Stack & PC Register <span>➔</span></div>
+                                <div class="mm-node-desc">Method frames & instruction pointer</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Branch 4: JIT Compiler -->
+                    <div class="mm-branch-card mm-branch-jit">
+                        <div class="mm-branch-header" style="color: var(--jit-color);">
+                            <span>⚡</span> 4. JIT (Just-In-Time)
+                        </div>
+                        <div class="mm-node-list">
+                            <div class="mm-node" onclick="showModal('Interpreter vs JIT', 'Interpreter executes bytecode line-by-line. JIT compiles frequently called loops into native CPU machine code.')">
+                                <div class="mm-node-title">🔄 Interpreter vs JIT <span>➔</span></div>
+                                <div class="mm-node-desc">Line-by-Line vs Native Compiler</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('HotSpot Profiler', 'Tracks method invocation counters and loop counts to identify performance bottlenecks.')">
+                                <div class="mm-node-title">🔥 HotSpot Profiler <span>➔</span></div>
+                                <div class="mm-node-desc">Identifies frequently executed code</div>
+                            </div>
+                            <div class="mm-node" onclick="showModal('Native Code Cache', 'Caches compiled native x86/ARM machine code so subsequent executions run at full CPU speed.')">
+                                <div class="mm-node-title">💾 Native Code Cache <span>➔</span></div>
+                                <div class="mm-node-desc">Stores compiled CPU instructions</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: EXECUTION SIMULATOR -->
+        <div id="tab-simulator" class="section-view">
+            <div class="sim-container">
+                <div class="sim-header">
+                    <div class="sim-title">Java Program Execution Pipeline Simulator</div>
+                    <div class="sim-controls">
+                        <button class="btn-sim" onclick="runSimulation()">
+                            <span>▶</span> Run Execution Pipeline
+                        </button>
+                        <button class="btn-sim btn-reset" onclick="resetSimulation()">
+                            <span>🔄</span> Reset
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flow-pipeline">
+                    <div class="flow-step" id="step-1">
+                        <div class="step-num">1</div>
+                        <div class="step-title">Source Code</div>
+                        <div class="step-desc">Write <code>Main.java</code> code.</div>
+                    </div>
+                    <div class="flow-step" id="step-2">
+                        <div class="step-num">2</div>
+                        <div class="step-title">JDK Compiler</div>
+                        <div class="step-desc"><code>javac Main.java</code> produces <code>Main.class</code> (Bytecode).</div>
+                    </div>
+                    <div class="flow-step" id="step-3">
+                        <div class="step-num">3</div>
+                        <div class="step-title">ClassLoader</div>
+                        <div class="step-desc">Loads, verifies bytecode into Metaspace.</div>
+                    </div>
+                    <div class="flow-step" id="step-4">
+                        <div class="step-num">4</div>
+                        <div class="step-title">JVM Memory</div>
+                        <div class="step-desc">Allocates Stack frames & Heap memory.</div>
+                    </div>
+                    <div class="flow-step" id="step-5">
+                        <div class="step-num">5</div>
+                        <div class="step-title">Interpreter</div>
+                        <div class="step-desc">Line-by-line bytecode execution starts.</div>
+                    </div>
+                    <div class="flow-step" id="step-6">
+                        <div class="step-num">6</div>
+                        <div class="step-title">JIT Compiler</div>
+                        <div class="step-desc">Hotspot loops compiled directly to Native Machine Code!</div>
+                    </div>
+                </div>
+
+                <div class="sim-console" id="console-output">
+                    > Console ready. Click "Run Execution Pipeline" to simulate how Java runs code from compiler to JIT.
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: COMPREHENSIVE NOTES -->
+        <div id="tab-notes" class="section-view">
+            <div class="notes-grid">
+                
+                <div class="note-card">
+                    <span class="note-tag tag-jdk">JDK Deep Dive</span>
+                    <div class="note-title">JDK (Java Development Kit)</div>
+                    <div class="note-body">
+                        <p>The <strong>JDK</strong> is a complete software development environment used to develop Java applications.</p>
+                        <ul>
+                            <li><strong>Formula</strong>: <code>JDK = JRE + Development Tools</code></li>
+                            <li>Includes tools like <code>javac</code> (compiler), <code>jdb</code> (debugger), <code>jar</code> (archiver), and <code>javap</code> (disassembler).</li>
+                            <li><strong>Target User</strong>: Software developers writing and compiling code.</li>
+                            <li><strong>Platform Dependent</strong>: You must download JDK specific to Windows, macOS, or Linux.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <span class="note-tag tag-jre">JRE Deep Dive</span>
+                    <div class="note-title">JRE (Java Runtime Environment)</div>
+                    <div class="note-body">
+                        <p>The <strong>JRE</strong> is the implementation software that allows a compiled Java program to run.</p>
+                        <ul>
+                            <li><strong>Formula</strong>: <code>JRE = JVM + Core Class Libraries</code></li>
+                            <li>Contains standard runtime libraries (like <code>rt.jar</code> / Java modules) required for program execution.</li>
+                            <li>Does <strong>NOT</strong> contain development tools like <code>javac</code> compiler.</li>
+                            <li><strong>Target User</strong>: End users running Java desktop or server applications.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <span class="note-tag tag-jvm">JVM Deep Dive</span>
+                    <div class="note-title">JVM (Java Virtual Machine)</div>
+                    <div class="note-body">
+                        <p>The <strong>JVM</strong> is an abstract virtual machine that executes Java bytecode.</p>
+                        <ul>
+                            <li><strong>Platform Independence</strong>: Write Once, Run Anywhere (WORA) works because Java code compiles to bytecode, which any platform-specific JVM can execute.</li>
+                            <li><strong>Key Components</strong>:
+                                <ul>
+                                    <li><strong>ClassLoader Subsystem</strong>: Loads, links, and initializes `.class` files.</li>
+                                    <li><strong>Runtime Data Areas</strong>: Method Area (Metaspace), Heap, JVM Stack, PC Register, Native Method Stack.</li>
+                                    <li><strong>Execution Engine</strong>: Interpreter, JIT Compiler, Garbage Collector.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="note-card">
+                    <span class="note-tag tag-jit">JIT Compiler Deep Dive</span>
+                    <div class="note-title">JIT (Just-In-Time) Compiler</div>
+                    <div class="note-body">
+                        <p>The <strong>JIT Compiler</strong> is a component of the JVM Execution Engine designed to dramatically improve execution speed.</p>
+                        <ul>
+                            <li><strong>Why JIT?</strong> Pure interpretation line-by-line is slow. JIT identifies "Hot Spots" (frequently executed methods/loops) and compiles those bytecode sections directly into native machine code once.</li>
+                            <li><strong>Caching</strong>: The compiled native code is cached in code memory so subsequent calls run at native speed without re-interpreting.</li>
+                            <li><strong>Adaptive Optimization</strong>: JIT performs inline expansion, dead code elimination, and loop unrolling dynamically at runtime.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 4: INTERVIEW FLASHCARDS -->
+        <div id="tab-interview" class="section-view">
+            <div class="faq-accordion">
+                
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Q1: What is the main difference between JDK, JRE, and JVM?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            <strong>JDK</strong> is the full development toolkit (Compiler + Tools + JRE). <br>
+                            <strong>JRE</strong> is the runtime environment required to execute Java apps (JVM + Libraries). <br>
+                            <strong>JVM</strong> is the virtual execution engine that converts bytecode into native machine instructions.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Q2: Why is Java called platform independent while JVM is platform dependent?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            Java code compiles to neutral bytecode (<code>.class</code> files), which is identical across all operating systems. However, each operating system needs a specialized JVM written specifically for its native architecture (Windows JVM vs Linux JVM vs macOS JVM) to translate bytecode into that OS's specific machine code.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Q3: How does JIT Compiler improve Java performance compared to pure interpretation?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            The interpreter converts bytecode to machine code line-by-line, which adds overhead during loops. The <strong>JIT Compiler</strong> identifies frequently executed code blocks ("hot spots") and compiles those bytecode blocks into native machine code directly. It caches this native code so future executions bypass the interpreter completely, matching C/C++ execution speeds.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Q4: Where are static variables and object instances stored in JVM memory?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            * <strong>Static variables & class metadata</strong>: Stored in <strong>Metaspace / Method Area</strong>.<br>
+                            * <strong>All Object instances (created with <code>new</code>)</strong>: Stored in <strong>Heap Memory</strong>.<br>
+                            * <strong>Primitive local variables & object reference variables</strong>: Stored in the thread's <strong>JVM Stack</strong>.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFaq(this)">
+                    <div class="faq-question">
+                        <span>Q5: What happens when you type <code>java Main</code> in terminal?</span>
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-inner">
+                            1. OS starts a new JVM process.<br>
+                            2. <strong>ClassLoader</strong> loads <code>Main.class</code> into Metaspace and links it.<br>
+                            3. JVM locates public static void <code>main(String[] args)</code>.<br>
+                            4. Main thread stack frame is created on JVM Stack.<br>
+                            5. Execution Engine interprets bytecode & JIT compiles hotspots to native execution.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Backdrop -->
+    <div class="modal-backdrop" id="modal-backdrop">
+        <div class="modal-card">
+            <div class="modal-title" id="modal-title">Component Title</div>
+            <div class="modal-content" id="modal-content">Component detailed description...</div>
+            <button class="btn-close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.section-view').forEach(sec => sec.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        function toggleFaq(element) {
+            element.classList.toggle('active');
+        }
+
+        function showModal(title, desc) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-content').innerText = desc;
+            document.getElementById('modal-backdrop').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.remove('active');
+        }
+
+        // Simulator Logic
+        let simTimeout;
+        function logConsole(msg) {
+            const consoleEl = document.getElementById('console-output');
+            consoleEl.innerHTML += '<br>> ' + msg;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function resetSimulation() {
+            clearTimeout(simTimeout);
+            document.querySelectorAll('.flow-step').forEach(step => {
+                step.classList.remove('active', 'highlight-jit');
+            });
+            document.getElementById('console-output').innerHTML = '> Console reset. Ready.';
+        }
+
+        function runSimulation() {
+            resetSimulation();
+            const consoleEl = document.getElementById('console-output');
+            consoleEl.innerHTML = '> Starting Java Execution Pipeline...';
+
+            const steps = [
+                { id: 'step-1', log: 'Step 1: Developer writes Main.java source code.' },
+                { id: 'step-2', log: 'Step 2: javac compiles Main.java -> Main.class (Bytecode).' },
+                { id: 'step-3', log: 'Step 3: ClassLoader subsystem loads Main.class into Metaspace and verifies bytecode.' },
+                { id: 'step-4', log: 'Step 4: JVM initializes Main thread Stack frame and allocates Heap memory.' },
+                { id: 'step-5', log: 'Step 5: JVM Execution Engine starts interpreting bytecode line-by-line.' },
+                { id: 'step-6', log: 'Step 6: Profiler detects loop hotspot! JIT Compiler translates loop to Native Machine Code. Execution speed accelerates 10x! 🚀' }
+            ];
+
+            let idx = 0;
+            function executeNextStep() {
+                if (idx < steps.length) {
+                    if (idx > 0) {
+                        document.getElementById(steps[idx - 1].id).classList.remove('active');
+                    }
+                    const currentStep = document.getElementById(steps[idx].id);
+                    currentStep.classList.add('active');
+                    if (idx === 5) {
+                        currentStep.classList.add('highlight-jit');
+                    }
+                    logConsole(steps[idx].log);
+                    idx++;
+                    simTimeout = setTimeout(executeNextStep, 1500);
+                } else {
+                    logConsole('✅ Execution Completed Successfully!');
+                }
+            }
+
+            executeNextStep();
+        }
+    </script>
+</body>
+</html>
